@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #define MAX_NOME 100
 #define MAX_HISTORICO 500
 
@@ -9,185 +10,154 @@ typedef struct Aluno {
     char nome[MAX_NOME];
     int idade;
     char historicoMedico[MAX_HISTORICO];
-    char dataAdmissao[11]; // Data de admissão no formato dd/mm/aaaa
-    struct Aluno* prox;  // Ponteiro para o próximo aluno
+    char dataAdmissao[11];
+    struct Aluno* prox;
 } Aluno;
 
-// Função para criar um novo aluno
 Aluno* criarAluno(int matricula, const char* nome, int idade, const char* historicoMedico, const char* dataAdmissao) {
-    Aluno* novoAluno = (Aluno*)malloc(sizeof(Aluno));
-    novoAluno->matricula = matricula;
-    strncpy(novoAluno->nome, nome, MAX_NOME);
-    novoAluno->idade = idade;
-    strncpy(novoAluno->historicoMedico, historicoMedico, MAX_HISTORICO);
-    strncpy(novoAluno->dataAdmissao, dataAdmissao, 11);
-    novoAluno->prox = NULL;
-    return novoAluno;
+    Aluno* novo = (Aluno*)malloc(sizeof(Aluno));
+    novo->matricula = matricula;
+    strncpy(novo->nome, nome, MAX_NOME);
+    novo->idade = idade;
+    strncpy(novo->historicoMedico, historicoMedico, MAX_HISTORICO);
+    strncpy(novo->dataAdmissao, dataAdmissao, 11);
+    novo->prox = NULL;
+    return novo;
 }
 
-// Função para inserir um aluno na lista
 void inserirAluno(Aluno** lista, int matricula, const char* nome, int idade, const char* historicoMedico, const char* dataAdmissao) {
-    Aluno* novoAluno = criarAluno(matricula, nome, idade, historicoMedico, dataAdmissao);
-    novoAluno->prox = *lista;
-    *lista = novoAluno;
+    Aluno* novo = criarAluno(matricula, nome, idade, historicoMedico, dataAdmissao);
+    novo->prox = *lista;
+    *lista = novo;
 }
 
-// Função para alterar os dados de um aluno
-void alterarAluno(Aluno* lista, int matricula, const char* novoNome, int novaIdade, const char* novoHistoricoMedico, const char* novaDataAdmissao) {
-    Aluno* temp = lista;
-    while (temp != NULL) {
+void alterarAluno(Aluno* lista, int matricula, const char* nome, int idade, const char* historicoMedico, const char* dataAdmissao) {
+    for (Aluno* temp = lista; temp; temp = temp->prox) {
         if (temp->matricula == matricula) {
-            strncpy(temp->nome, novoNome, MAX_NOME);
-            temp->idade = novaIdade;
-            strncpy(temp->historicoMedico, novoHistoricoMedico, MAX_HISTORICO);
-            strncpy(temp->dataAdmissao, novaDataAdmissao, 11);
-            printf("Aluno com matrícula %d alterado com sucesso.\n", matricula);
+            strncpy(temp->nome, nome, MAX_NOME);
+            temp->idade = idade;
+            strncpy(temp->historicoMedico, historicoMedico, MAX_HISTORICO);
+            strncpy(temp->dataAdmissao, dataAdmissao, 11);
+            printf("Aluno %d alterado com sucesso.\n", matricula);
             return;
         }
-        temp = temp->prox;
     }
-    printf("Aluno com matrícula %d não encontrado.\n", matricula);
+    printf("Aluno %d não encontrado.\n", matricula);
 }
 
-// Função para excluir um aluno
 void excluirAluno(Aluno** lista, int matricula) {
     Aluno *temp = *lista, *anterior = NULL;
 
-    // Verifica se o aluno a ser removido está na cabeça da lista
-    if (temp != NULL && temp->matricula == matricula) {
-        *lista = temp->prox;
-        free(temp);
-        printf("Aluno com matrícula %d excluído com sucesso.\n", matricula);
-        return;
-    }
-
-    // Procura o aluno na lista
-    while (temp != NULL && temp->matricula != matricula) {
+    while (temp && temp->matricula != matricula) {
         anterior = temp;
         temp = temp->prox;
     }
 
-    // Se o aluno não for encontrado
-    if (temp == NULL) {
-        printf("Aluno com matrícula %d não encontrado.\n", matricula);
+    if (!temp) {
+        printf("Aluno %d não encontrado.\n", matricula);
         return;
     }
 
-    // Desvincula o aluno da lista e o exclui
-    anterior->prox = temp->prox;
+    if (!anterior) *lista = temp->prox;
+    else anterior->prox = temp->prox;
+
     free(temp);
-    printf("Aluno com matrícula %d excluído com sucesso.\n", matricula);
+    printf("Aluno %d excluído com sucesso.\n", matricula);
 }
 
-// Função para listar todos os alunos
 void listarAlunos(Aluno* lista) {
-    Aluno* temp = lista;
-    if (temp == NULL) {
+    if (!lista) {
         printf("Nenhum aluno cadastrado.\n");
         return;
     }
-    printf("\nLista de Alunos da Enfermaria IFF Med:\n");
-    while (temp != NULL) {
+
+    printf("\nLista de Alunos:\n");
+    for (Aluno* temp = lista; temp; temp = temp->prox) {
         printf("\nMatrícula: %d\n", temp->matricula);
         printf("Nome: %s\n", temp->nome);
         printf("Idade: %d\n", temp->idade);
         printf("Histórico Médico: %s\n", temp->historicoMedico);
         printf("Data de Admissão: %s\n", temp->dataAdmissao);
-        printf("----------------------------\n");
-        temp = temp->prox;
     }
 }
 
-// Função para liberar a memória alocada pela lista
 void liberarLista(Aluno* lista) {
-    Aluno* temp;
-    while (lista != NULL) {
-        temp = lista;
+    while (lista) {
+        Aluno* temp = lista;
         lista = lista->prox;
         free(temp);
     }
 }
 
-// Função principal
 int main() {
-    Aluno* listaAlunos = NULL;
-    int escolha, matricula, idade;
-    char nome[MAX_NOME];
-    char historicoMedico[MAX_HISTORICO];
-    char dataAdmissao[11];
+    Aluno* lista = NULL;
+    int opcao, matricula, idade;
+    char nome[MAX_NOME], historico[MAX_HISTORICO], data[11];
 
-    while (1) {
-        printf("\nMenu de Opções IFF Med - Enfermaria:\n");
-        printf("1. Inserir novo aluno\n");
-        printf("2. Alterar dados de um aluno\n");
-        printf("3. Excluir aluno\n");
-        printf("4. Listar todos os alunos\n");
-        printf("5. Sair\n");
-        printf("Escolha uma opção: ");
-        scanf("%d", &escolha);
-        getchar(); // Limpar o buffer do teclado
+    do {
+        printf("\n--- Menu ---\n");
+        printf("1. Inserir aluno\n2. Alterar aluno\n3. Excluir aluno\n4. Listar alunos\n5. Sair\nOpção: ");
+        scanf("%d", &opcao);
+        getchar();
 
-        switch (escolha) {
+        switch (opcao) {
             case 1:
-                printf("\nInserir Novo Aluno na Enfermaria:\n");
                 printf("Matrícula: ");
                 scanf("%d", &matricula);
-                getchar(); // Limpar o buffer
+                getchar();
                 printf("Nome: ");
                 fgets(nome, MAX_NOME, stdin);
-                nome[strcspn(nome, "\n")] = 0;  // Remover o '\n' da string
+                nome[strcspn(nome, "\n")] = 0;
                 printf("Idade: ");
                 scanf("%d", &idade);
-                getchar(); // Limpar o buffer
+                getchar();
                 printf("Histórico Médico: ");
-                fgets(historicoMedico, MAX_HISTORICO, stdin);
-                historicoMedico[strcspn(historicoMedico, "\n")] = 0;
+                fgets(historico, MAX_HISTORICO, stdin);
+                historico[strcspn(historico, "\n")] = 0;
                 printf("Data de Admissão (dd/mm/aaaa): ");
-                fgets(dataAdmissao, 11, stdin);
-                dataAdmissao[strcspn(dataAdmissao, "\n")] = 0;
-                inserirAluno(&listaAlunos, matricula, nome, idade, historicoMedico, dataAdmissao);
+                fgets(data, 11, stdin);
+                data[strcspn(data, "\n")] = 0;
+                inserirAluno(&lista, matricula, nome, idade, historico, data);
                 break;
 
             case 2:
-                printf("\nAlterar Dados de um Aluno:\n");
                 printf("Matrícula: ");
                 scanf("%d", &matricula);
-                getchar(); // Limpar o buffer
+                getchar();
                 printf("Novo Nome: ");
                 fgets(nome, MAX_NOME, stdin);
-                nome[strcspn(nome, "\n")] = 0;  // Remover o '\n' da string
+                nome[strcspn(nome, "\n")] = 0;
                 printf("Nova Idade: ");
                 scanf("%d", &idade);
-                getchar(); // Limpar o buffer
+                getchar();
                 printf("Novo Histórico Médico: ");
-                fgets(historicoMedico, MAX_HISTORICO, stdin);
-                historicoMedico[strcspn(historicoMedico, "\n")] = 0;
+                fgets(historico, MAX_HISTORICO, stdin);
+                historico[strcspn(historico, "\n")] = 0;
                 printf("Nova Data de Admissão (dd/mm/aaaa): ");
-                fgets(dataAdmissao, 11, stdin);
-                dataAdmissao[strcspn(dataAdmissao, "\n")] = 0;
-                alterarAluno(listaAlunos, matricula, nome, idade, historicoMedico, dataAdmissao);
+                fgets(data, 11, stdin);
+                data[strcspn(data, "\n")] = 0;
+                alterarAluno(lista, matricula, nome, idade, historico, data);
                 break;
 
             case 3:
-                printf("\nExcluir Aluno:\n");
                 printf("Matrícula: ");
                 scanf("%d", &matricula);
-                excluirAluno(&listaAlunos, matricula);
+                excluirAluno(&lista, matricula);
                 break;
 
             case 4:
-                listarAlunos(listaAlunos);
+                listarAlunos(lista);
                 break;
 
             case 5:
-                liberarLista(listaAlunos);
-                printf("Saindo do programa...\n");
-                return 0;
+                liberarLista(lista);
+                printf("Saindo...\n");
+                break;
 
             default:
-                printf("Opção inválida! Tente novamente.\n");
+                printf("Opção inválida!\n");
         }
-    }
+    } while (opcao != 5);
+
     return 0;
 }
-
